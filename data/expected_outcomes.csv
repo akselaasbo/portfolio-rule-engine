@@ -1,0 +1,8 @@
+portfolio_id,expected_result,notes_no
+P1_VALID_BALANCED,valid,Bør passere alle hovedregler.
+P2_TOO_MUCH_US_EQUITY,invalid,Bør feile på for høy aksjeeksponering og for høy US/geografi-eksponering.
+P3_CONCENTRATED,invalid,Bør feile på maks enkeltposisjon og minimum antall holdings.
+P4_INVALID_TOTAL_WEIGHT,invalid,Bør feile fordi totalvekten ikke summerer til 100 %.
+P5_UNKNOWN_INSTRUMENT,warning_or_invalid,Bør trigge ukjent klassifisering for MYST.
+P6_NEAR_LIMITS,valid,"Bør ligge nær grenseverdier, men passere."
+P7_DEFENSIVE,valid,Bør passere og vise defensiv profil med høy rente/kontantandel.

@@ -1,0 +1,18 @@
+ticker,name,asset_class,sector,geography,instrument_type,expense_ratio_pct
+VTI,Vanguard Total Stock Market ETF,Equity,Broad Market,US,ETF,0.03
+VOO,Vanguard S&P 500 ETF,Equity,Large Cap Blend,US,ETF,0.03
+VXUS,Vanguard Total International Stock ETF,Equity,International Equity,Global ex-US,ETF,0.07
+VT,Vanguard Total World Stock ETF,Equity,Global Equity,Global,ETF,0.07
+QQQ,Invesco QQQ Trust,Equity,Technology Growth,US,ETF,0.2
+IWM,iShares Russell 2000 ETF,Equity,Small Cap,US,ETF,0.19
+XLK,Technology Select Sector SPDR Fund,Equity,Technology,US,ETF,0.09
+XLF,Financial Select Sector SPDR Fund,Equity,Financials,US,ETF,0.1
+VNQ,Vanguard Real Estate ETF,Real Estate,REIT,US,ETF,0.12
+BND,Vanguard Total Bond Market ETF,Fixed Income,US Aggregate Bond,US,ETF,0.03
+AGG,iShares Core U.S. Aggregate Bond ETF,Fixed Income,US Aggregate Bond,US,ETF,0.03
+TIP,iShares TIPS Bond ETF,Fixed Income,Inflation-Protected Bond,US,ETF,0.19
+LQD,iShares iBoxx $ Investment Grade Corporate Bond ETF,Fixed Income,Corporate Bond,US,ETF,0.14
+BNDX,Vanguard Total International Bond ETF,Fixed Income,International Bond,Global ex-US,ETF,0.07
+GLD,SPDR Gold Shares,Alternatives,Commodities,Global,ETF,0.4
+CASH,Cash Position,Cash,Cash,US,Cash,0.0
+MYST,Mystery Asset,Unknown,Unknown,Unknown,Other,0.0

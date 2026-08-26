@@ -1,0 +1,9 @@
+rule_code,severity,metric_definition,scope,operator,threshold,description_no
+TOTAL_WEIGHT_EQUALS_100,error,sum(weight_pct) must equal 100,portfolio,==,100,Total porteføljevekt må være 100 %
+MAX_SINGLE_HOLDING,error,max holding weight,holding,<=,35,Ingen enkeltposisjon kan overstige 35 %
+MAX_EQUITY_EXPOSURE,error,sum weights where asset_class=Equity,asset_class:Equity,<=,80,Aksjeeksponering kan ikke overstige 80 %
+MIN_FIXED_INCOME_EXPOSURE,error,sum weights where asset_class=Fixed Income,asset_class:Fixed Income,>=,10,Renteeksponering må være minst 10 %
+MAX_SINGLE_SECTOR_EXPOSURE,error,max aggregated sector exposure,sector,<=,40,Eksponering mot én sektor kan ikke overstige 40 %
+MAX_SINGLE_GEOGRAPHY_EXPOSURE,error,max aggregated geography exposure,geography,<=,60,Eksponering mot én geografi kan ikke overstige 60 %
+MIN_NUMBER_OF_HOLDINGS,error,count holdings,portfolio,>=,5,Porteføljen må ha minst 5 posisjoner
+UNKNOWN_CLASSIFICATION,warning,unknown asset_class/sector/geography,holding,==,0,Instrumenter med ukjent klassifisering skal gi warning eller failure
