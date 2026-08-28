@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
@@ -9,6 +13,11 @@ class Settings(BaseSettings):
     data_dir: str = "data"
     log_level: str = "INFO"
     weight_tolerance: float = 0.01
+
+    @property
+    def data_path(self) -> Path:
+        """Absolutt sti til datamappen, forankret i prosjektrota uansett arbeidsmappe."""
+        return PROJECT_ROOT / self.data_dir
 
 
 settings = Settings()
