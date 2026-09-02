@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.routes_instruments import router as instruments_router
+from app.api.routes_validate import router as validate_router
 from app.config import settings
 from app.data.repository import InstrumentRepository, RuleRepository
 from app.domain.engine import RuleEngine
@@ -36,6 +37,7 @@ app = FastAPI(
 )
 
 app.include_router(instruments_router)
+app.include_router(validate_router)
 
 
 @app.get("/health")
