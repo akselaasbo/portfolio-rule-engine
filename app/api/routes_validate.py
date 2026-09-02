@@ -51,7 +51,11 @@ def validate_portfolio(
     nearest_valid = None
     if result.violations:
         nearest_valid = find_nearest_valid_portfolio(
-            holdings, instrument_repo, rule_engine.rule_repository, settings.weight_tolerance
+            holdings,
+            instrument_repo,
+            rule_engine.rule_repository,
+            settings.weight_tolerance,
+            settings.min_position_weight_pct,
         )
 
     return ValidationResponse.from_result(result, nearest_valid)

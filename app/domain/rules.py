@@ -9,28 +9,30 @@ def parse_scope(scope: str) -> tuple[str, str | None]:
     return dimension, (value if sep else None)
 
 
-def evaluate_portfolio(metric_definition: str, exposures: Exposures) -> tuple[float, str]:
+def evaluate_portfolio(metric_definition: str, exposures: Exposures) -> tuple[float, str, str]:
     if "count" in metric_definition.lower():
-        return float(exposures.number_of_holdings), "portfolio"
-    return exposures.total_weight, "portfolio"
+        return float(exposures.number_of_holdings), "portfolio", "count"
+    return exposures.total_weight, "portfolio", "percent"
 
 
-def evaluate_holding(metric_definition: str, exposures: Exposures) -> tuple[float, str]:
+def evaluate_holding(metric_definition: str, exposures: Exposures) -> tuple[float, str, str]:
     if "unknown" in metric_definition.lower():
-        return float(exposures.unknown_classification_count), "holding"
-    return exposures.max_holding_weight, "holding"
+        return float(exposures.unknown_classification_count), "holding", "count"
+    return exposures.max_holding_weight, "holding", "percent"
 
 
-def evaluate_asset_class(value: str, exposures: Exposures) -> tuple[float, str]:
-    return exposures.by_asset_class.get(value, 0.0), value
+def evaluate_asset_class(value: str, exposures: Exposures) -> tuple[float, str, str]:
+    return exposures.by_asset_class.get(value, 0.0), value, "percent"
 
 
-def evaluate_sector(exposures: Exposures) -> tuple[float, str]:
-    return _max_group(exposures.by_sector)
+def evaluate_sector(exposures: Exposures) -> tuple[float, str, str]:
+    value, group = _max_group(exposures.by_sector)
+    return value, group, "percent"
 
 
-def evaluate_geography(exposures: Exposures) -> tuple[float, str]:
-    return _max_group(exposures.by_geography)
+def evaluate_geography(exposures: Exposures) -> tuple[float, str, str]:
+    value, group = _max_group(exposures.by_geography)
+    return value, group, "percent"
 
 
 def _max_group(groups: dict[str, float]) -> tuple[float, str]:

@@ -16,6 +16,7 @@ class ValidationResponse(BaseModel):
     summary: str
     nearest_valid_portfolio: list[Holding] | None = None
     change_summary: list[ChangeSummaryItem] | None = None
+    nearest_valid_explanation: str | None = None
 
     @classmethod
     def from_result(
@@ -31,6 +32,7 @@ class ValidationResponse(BaseModel):
             summary=_build_summary(len(result.violations), len(result.warnings)),
             nearest_valid_portfolio=nearest_valid.holdings if nearest_valid else None,
             change_summary=nearest_valid.change_summary if nearest_valid else None,
+            nearest_valid_explanation=nearest_valid.explanation if nearest_valid else None,
         )
 
 

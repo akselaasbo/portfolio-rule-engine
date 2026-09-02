@@ -47,6 +47,7 @@ def find_nearest_valid_portfolio(
     instrument_repo: InstrumentRepository,
     rule_repo: RuleRepository,
     tolerance: float,
+    min_position_weight: float = 2.0,
 ) -> NearestValidResult:
     engine = RuleEngine(rule_repo, tolerance)
     original_result = engine.evaluate(holdings, instrument_repo)
@@ -72,7 +73,7 @@ def find_nearest_valid_portfolio(
     min_holdings_rule = _find_min_holdings_rule(error_rules)
     if min_holdings_rule is not None:
         min_count = int(round(min_holdings_rule.threshold))
-        enforced = _enforce_min_holdings(x, min_count, bounds, constraints, x0)
+        enforced = _enforce_min_holdings(x, min_count, bounds, constraints, x0, min_position_weight)
         if enforced is None:
             return NearestValidResult(
                 holdings=None,
@@ -80,6 +81,10 @@ def find_nearest_valid_portfolio(
                 explanation="Klarte ikke å oppfylle minimum antall posisjoner uten å bryte andre regler.",
             )
         x = enforced
+
+    x = _enforce_meaningful_positions(
+        x, universe, bounds, constraints, x0, min_position_weight, engine, instrument_repo
+    )
 
     new_holdings = _finalize_holdings(x, universe, bounds)
 
@@ -210,14 +215,19 @@ def _enforce_min_holdings(
     bounds: list[tuple[float, float]],
     constraints: list[dict],
     x0: np.ndarray,
+    min_position_weight: float,
 ) -> np.ndarray | None:
-    current_count = int(np.sum(x >= MIN_MEANINGFUL_WEIGHT_PCT))
+    # Bruker min_position_weight (domenegrensen for en "reell" posisjon) her, ikke
+    # MIN_MEANINGFUL_WEIGHT_PCT (ren avrundingsstøy) - MIN_NUMBER_OF_HOLDINGS skal telle
+    # meningsfulle posisjoner, ellers kan _enforce_meaningful_positions siden fjerne nok
+    # posisjoner til at antallet igjen havner under minimumskravet.
+    current_count = int(np.sum(x >= min_position_weight))
     if current_count >= min_count:
         return x
 
     needed = min_count - current_count
     candidates = sorted(
-        (i for i in range(len(x)) if x[i] < MIN_MEANINGFUL_WEIGHT_PCT and bounds[i][1] > 0),
+        (i for i in range(len(x)) if x[i] < min_position_weight and bounds[i][1] > 0),
         key=lambda i: x[i],
         reverse=True,
     )
@@ -227,9 +237,46 @@ def _enforce_min_holdings(
     forced_bounds = list(bounds)
     for i in candidates[:needed]:
         lower, upper = forced_bounds[i]
-        forced_bounds[i] = (max(lower, MIN_MEANINGFUL_WEIGHT_PCT), upper)
+        forced_bounds[i] = (max(lower, min_position_weight), upper)
 
     return _solve(x0, forced_bounds, constraints)
+
+
+def _enforce_meaningful_positions(
+    x: np.ndarray,
+    universe: list[Instrument],
+    bounds: list[tuple[float, float]],
+    constraints: list[dict],
+    x0: np.ndarray,
+    min_position_weight: float,
+    engine: RuleEngine,
+    instrument_repo: InstrumentRepository,
+) -> np.ndarray:
+    """Fjerner posisjoner uten reell betydning (over avrundingsstøy, men under
+    min_position_weight). Den kvadratiske målfunksjonen foretrekker i seg selv å spre en
+    nødvendig vektendring tynt ut over mange posisjoner fremfor å konsentrere den - det er
+    derfor slike posisjoner oppstår. Løsningen er etterbehandling med fallback: ekskluder de
+    små posisjonene helt og løs på nytt, slik at vekten samler seg på de gjenværende (typisk
+    posisjoner brukeren allerede eier, siden de sjelden er blant de som ble ekskludert).
+    Gir ikke det andre forsøket en gyldig løsning, beholdes det opprinnelige resultatet."""
+    small_indices = [i for i in range(len(x)) if MIN_MEANINGFUL_WEIGHT_PCT <= x[i] < min_position_weight]
+    if not small_indices:
+        return x
+
+    trimmed_bounds = list(bounds)
+    for i in small_indices:
+        trimmed_bounds[i] = (0.0, 0.0)
+
+    retried = _solve(x0, trimmed_bounds, constraints)
+    if retried is None:
+        return x
+
+    retried_holdings = _finalize_holdings(retried, universe, trimmed_bounds)
+    revalidation = engine.evaluate(retried_holdings, instrument_repo)
+    if not revalidation.portfolio_valid:
+        return x
+
+    return retried
 
 
 def _finalize_holdings(

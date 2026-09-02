@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portefølje-regelmotor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="page-header">
+    <h1>Portefølje-regelmotor</h1>
+    <p class="subtitle">Sett sammen en portefølje og valider den mot regelsettet.</p>
+  </header>
+
+  <main class="container">
+    <section class="card" id="builder-card">
+      <h2>Portefølje</h2>
+      <table class="holdings-table" id="holdings-table">
+        <thead>
+          <tr>
+            <th>Instrument</th>
+            <th>Vekt (%)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="holdings-body"></tbody>
+      </table>
+
+      <div class="builder-footer">
+        <button type="button" id="add-row-btn" class="btn btn-secondary">+ Legg til rad</button>
+        <div class="weight-sum" id="weight-sum">Sum: 0,0 %</div>
+      </div>
+
+      <div class="builder-actions">
+        <button type="button" id="validate-btn" class="btn btn-primary">Valider portefølje</button>
+      </div>
+
+      <div class="banner banner-error" id="error-banner" hidden></div>
+    </section>
+
+    <section class="card" id="result-card" hidden>
+      <div class="status-bar" id="status-bar"></div>
+
+      <div class="result-columns">
+        <div class="result-panel">
+          <h3>Regelbrudd</h3>
+          <ul class="finding-list" id="violations-list"></ul>
+          <p class="empty-note" id="violations-empty" hidden>Ingen regelbrudd.</p>
+        </div>
+        <div class="result-panel">
+          <h3>Advarsler</h3>
+          <ul class="finding-list" id="warnings-list"></ul>
+          <p class="empty-note" id="warnings-empty" hidden>Ingen advarsler.</p>
+        </div>
+      </div>
+
+      <div class="exposures-section">
+        <h3>Eksponering</h3>
+        <p class="exposures-stats" id="exposures-stats"></p>
+        <div class="exposures-columns">
+          <div>
+            <h4>Aktivaklasse</h4>
+            <ul class="exposure-list" id="exposure-asset-class"></ul>
+          </div>
+          <div>
+            <h4>Sektor</h4>
+            <ul class="exposure-list" id="exposure-sector"></ul>
+          </div>
+          <div>
+            <h4>Geografi</h4>
+            <ul class="exposure-list" id="exposure-geography"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="nearest-section" id="nearest-section" hidden>
+        <h3>Nærmeste gyldige portefølje</h3>
+        <div class="table-scroll">
+          <table class="nearest-table" id="nearest-table">
+            <thead>
+              <tr>
+                <th>Instrument</th>
+                <th>Opprinnelig</th>
+                <th>Forslag</th>
+                <th>Differanse</th>
+                <th>Status</th>
+                <th>Forklaring</th>
+              </tr>
+            </thead>
+            <tbody id="nearest-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="empty-note" id="nearest-explanation" hidden></p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

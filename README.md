@@ -54,3 +54,45 @@ Ugyldig input gir en feilkode. Formatfeil som manglende felt, feil datatype elle
 En portefølje som bryter reglene er ikke en feil. Den gir 200 OK med portfolio_valid: false og en liste over bruddene. Forespørselen ble behandlet korrekt. Svaret er bare at porteføljen ikke består, og det er hele formålet med endepunktet.
 
 Domenelaget kjenner ikke til HTTP. Når det møter noe det ikke kan behandle, kaster det en vanlig ValueError, og API-laget oversetter den til riktig statuskode.
+
+## Nærmeste gyldige portefølje
+
+Når en portefølje bryter en eller flere regler, beregnes en gyldig portefølje som ligger så nær den opprinnelige som mulig.
+
+Definisjon av «nærmest»
+
+Avstand måles som summen av kvadrerte endringer i vekter. Den gyldige porteføljen som minimerer denne summen regnes som den nærmeste.
+
+Kvadrert avvik er valgt fremfor absoluttavvik fordi det fordeler justeringen over flere posisjoner i stedet for å endre få posisjoner mye. Skal aksjeeksponeringen ned ti prosentpoeng, er det som regel bedre å ta litt fra flere aksjeposisjoner enn å fjerne én helt. Resultatet ligner mer på porteføljen rådgiveren opprinnelig satte sammen. Kvadrert avvik gir også et glatt og konvekst problem, som gjør at optimeringen konvergerer pålitelig.
+
+Metode
+
+Problemet løses som et optimeringsproblem med scipy.optimize.minimize og metoden SLSQP. Beslutningsvariablene er vekten til hvert instrument, målfunksjonen er summen av kvadrerte avvik fra de opprinnelige vektene, og reglene fra rules.csv utgjør bibetingelsene. De opprinnelige vektene brukes som startpunkt.
+
+Bibetingelsene bygges fra de samme regelobjektene som validatoren bruker. Endres en terskel i rules.csv, påvirker det både valideringen og optimeringen samtidig. To separate kodeveier for det samme regelsettet ville kunnet komme i utakt.
+
+Hele instrumentuniverset er beslutningsvariabler
+
+Optimeringen kan tildele vekt til alle instrumenter i instruments.csv, ikke bare de brukeren valgte. Dette er nødvendig, ikke en utvidelse for sikkerhets skyld. Eksempelportefølje P2 består av seks amerikanske instrumenter og har 100 % US-eksponering. Geografiregelen tillater maks 60 %. Uansett hvordan vekten fordeles mellom de seks, forblir eksponeringen 100 %, og det finnes ingen gyldig løsning innenfor brukerens eget utvalg.
+
+Målfunksjonen sørger for at dette ikke fører til unødvendige tilføyelser. Instrumenter brukeren ikke eier har opprinnelig vekt 0, og enhver vekt de tildeles straffes av kvadratleddet. De forblir derfor på 0 med mindre reglene krever noe annet.
+
+Instrumenter med Unknown i aktivaklasse, sektor eller geografi holdes utenfor kandidatutvalget. Uten denne begrensningen kunne optimeringen bruke dem til å avlaste geografigrensen, siden Unknown utgjør sin egen gruppe, og dermed foreslå en portefølje som selv utløser en advarsel om ukjent klassifisering. Eier brukeren et slikt instrument fra før, beholdes det og kan justeres, men optimeringen legger det ikke til på eget initiativ.
+
+Forenkling: minimum antall posisjoner
+
+Kravet om minst fem posisjoner er en kardinalitetsbetingelse. Antall posisjoner er ikke en kontinuerlig funksjon av vektene, og betingelsen lar seg ikke uttrykke som en konveks bibetingelse i optimeringen.
+
+Den håndteres derfor som etterbehandling. Etter optimeringen fjernes vekter under 0,5 prosentpoeng som støy, og antall reelle posisjoner telles. Er tallet under minimum, tvinges de nærmeste kandidatene inn og optimeringen kjøres på nytt. Dette gir ikke nødvendigvis den globalt optimale løsningen, men det gir en gyldig portefølje som ligger nær den opprinnelige.
+
+Sikkerhetsnett
+
+Den foreslåtte porteføljen kjøres alltid gjennom regelmotoren på nytt før den returneres. Er den ikke gyldig, returneres nearest_valid_portfolio: null med en forklaring i stedet for et forslag som ikke holder mål. Det samme skjer hvis optimeringen ikke konvergerer eller scipy kaster en feil.
+
+Denne revalideringen fanget en reell feil under utviklingen: normaliseringen som sikret at vektene summerte til nøyaktig 100 kunne skyve en posisjon over grensen for maksimal enkeltposisjon. Feilen ble oppdaget som et ugyldig resultat og ikke som et forslag til brukeren, og normaliseringen ble erstattet med en additiv korreksjon på en posisjon som har rom for den.
+
+Forklaring av endringer
+
+change_summary viser hver endring med opprinnelig vekt, ny vekt, differanse og kategori: justert, lagt til eller fjernet. Der det er mulig knyttes endringen til regelen som drev den.
+
+Koblingen er heuristisk. Den bygger på hvilken gruppe instrumentet tilhører og hvilken retning vekten er endret i: et maksimumskrav kan bare avlastes ved å redusere en posisjon i den aktuelle gruppen, og et minimumskrav bare ved å øke en. Kan ingen regel knyttes til endringen med sikkerhet, brukes en generisk begrunnelse fremfor en som kan være misvisende.

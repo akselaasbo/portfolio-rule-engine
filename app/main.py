@@ -1,12 +1,17 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes_instruments import router as instruments_router
 from app.api.routes_validate import router as validate_router
 from app.config import settings
 from app.data.repository import InstrumentRepository, RuleRepository
 from app.domain.engine import RuleEngine
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
 @asynccontextmanager
@@ -39,8 +44,16 @@ app = FastAPI(
 app.include_router(instruments_router)
 app.include_router(validate_router)
 
+# Montert på /static (ikke /) slik at API-rutene over ikke skygges av filtjeneren.
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 
 @app.get("/health")
 def health() -> dict:
     """Enkel liveness-sjekk. Brukes av Azure App Service."""
     return {"status": "ok", "version": app.version}
+
+
+@app.get("/")
+def index() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")

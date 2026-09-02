@@ -22,7 +22,11 @@ def test_nearest_valid_portfolio_is_actually_valid(
     rule_repository: RuleRepository,
 ) -> None:
     result = find_nearest_valid_portfolio(
-        PORTFOLIOS[portfolio_id], instrument_repository, rule_repository, settings.weight_tolerance
+        PORTFOLIOS[portfolio_id],
+        instrument_repository,
+        rule_repository,
+        settings.weight_tolerance,
+        settings.min_position_weight_pct,
     )
     assert result.holdings is not None, result.explanation
 
@@ -37,7 +41,11 @@ def test_already_valid_portfolio_is_unchanged(
 ) -> None:
     holdings = PORTFOLIOS["P5_UNKNOWN_INSTRUMENT"]
     result = find_nearest_valid_portfolio(
-        holdings, instrument_repository, rule_repository, settings.weight_tolerance
+        holdings,
+        instrument_repository,
+        rule_repository,
+        settings.weight_tolerance,
+        settings.min_position_weight_pct,
     )
 
     assert result.holdings is not None
@@ -53,7 +61,11 @@ def test_p2_adds_non_us_instrument(
 ) -> None:
     holdings = PORTFOLIOS["P2_TOO_MUCH_US_EQUITY"]
     result = find_nearest_valid_portfolio(
-        holdings, instrument_repository, rule_repository, settings.weight_tolerance
+        holdings,
+        instrument_repository,
+        rule_repository,
+        settings.weight_tolerance,
+        settings.min_position_weight_pct,
     )
     assert result.holdings is not None, result.explanation
 
@@ -75,7 +87,11 @@ def test_optimizer_never_introduces_unknown_classification(
 ) -> None:
     holdings = PORTFOLIOS[portfolio_id]
     result = find_nearest_valid_portfolio(
-        holdings, instrument_repository, rule_repository, settings.weight_tolerance
+        holdings,
+        instrument_repository,
+        rule_repository,
+        settings.weight_tolerance,
+        settings.min_position_weight_pct,
     )
     assert result.holdings is not None, result.explanation
 
@@ -99,9 +115,92 @@ def test_already_owned_unknown_instrument_is_kept(
     # optimeringen til faktisk å justere porteføljen mens MYST fortsatt eies fra før.
     holdings = [Holding(ticker="MYST", weight_pct=100.0)]
     result = find_nearest_valid_portfolio(
-        holdings, instrument_repository, rule_repository, settings.weight_tolerance
+        holdings,
+        instrument_repository,
+        rule_repository,
+        settings.weight_tolerance,
+        settings.min_position_weight_pct,
     )
     assert result.holdings is not None, result.explanation
 
     myst_weight = next((h.weight_pct for h in result.holdings if h.ticker == "MYST"), 0.0)
     assert myst_weight > 0
+
+
+@pytest.mark.parametrize("portfolio_id", INVALID_PORTFOLIO_IDS)
+def test_no_suggested_position_below_meaningful_threshold(
+    portfolio_id: str,
+    instrument_repository: InstrumentRepository,
+    rule_repository: RuleRepository,
+) -> None:
+    result = find_nearest_valid_portfolio(
+        PORTFOLIOS[portfolio_id],
+        instrument_repository,
+        rule_repository,
+        settings.weight_tolerance,
+        settings.min_position_weight_pct,
+    )
+    assert result.holdings is not None, result.explanation
+
+    for holding in result.holdings:
+        assert holding.weight_pct >= settings.min_position_weight_pct - 0.01, (
+            f"{holding.ticker} har en meningsløst liten foreslått vekt: {holding.weight_pct}"
+        )
+
+
+def test_no_suggested_position_below_threshold_when_spread_would_otherwise_occur(
+    instrument_repository: InstrumentRepository,
+    rule_repository: RuleRepository,
+) -> None:
+    # Fire posisjoner på totalt 80 % - må både løftes til 100 % og opp til minst 5 posisjoner.
+    # Uten 2 pp-terskelen sprer den kvadratiske målfunksjonen dette tynt ut over mange nye,
+    # nesten meningsløse posisjoner (observert: tolv nye posisjoner på ca. 1,3 % hver).
+    holdings = [
+        Holding(ticker="VTI", weight_pct=20),
+        Holding(ticker="BND", weight_pct=20),
+        Holding(ticker="GLD", weight_pct=20),
+        Holding(ticker="VNQ", weight_pct=20),
+    ]
+    result = find_nearest_valid_portfolio(
+        holdings,
+        instrument_repository,
+        rule_repository,
+        settings.weight_tolerance,
+        settings.min_position_weight_pct,
+    )
+    assert result.holdings is not None, result.explanation
+
+    for holding in result.holdings:
+        assert holding.weight_pct >= settings.min_position_weight_pct - 0.01, (
+            f"{holding.ticker} har en meningsløst liten foreslått vekt: {holding.weight_pct}"
+        )
+
+
+def test_cardinality_enforcement_uses_meaningful_weight_not_rounding_noise(
+    instrument_repository: InstrumentRepository,
+    rule_repository: RuleRepository,
+) -> None:
+    # Fire posisjoner som til sammen oppfyller alle regler unntatt MIN_NUMBER_OF_HOLDINGS.
+    # Femteposisjonen som tvinges inn skal få minst min_position_weight_pct (2 %), ikke den
+    # gamle avrundingsstøy-terskelen på 0,5 %.
+    holdings = [
+        Holding(ticker="VTI", weight_pct=25),
+        Holding(ticker="VXUS", weight_pct=25),
+        Holding(ticker="BND", weight_pct=25),
+        Holding(ticker="GLD", weight_pct=25),
+    ]
+    result = find_nearest_valid_portfolio(
+        holdings,
+        instrument_repository,
+        rule_repository,
+        settings.weight_tolerance,
+        settings.min_position_weight_pct,
+    )
+    assert result.holdings is not None, result.explanation
+    assert len(result.holdings) >= 5
+
+    original_tickers = {holding.ticker for holding in holdings}
+    added = [holding for holding in result.holdings if holding.ticker not in original_tickers]
+    assert len(added) >= 1
+    for holding in added:
+        assert holding.weight_pct >= settings.min_position_weight_pct - 0.01

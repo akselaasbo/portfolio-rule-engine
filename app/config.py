@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     data_dir: str = "data"
     log_level: str = "INFO"
     weight_tolerance: float = 0.01
+    min_position_weight_pct: float = 2.0
 
     @property
     def data_path(self) -> Path:

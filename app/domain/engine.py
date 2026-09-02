@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel
 
 from app.data.repository import InstrumentRepository, RuleRepository
@@ -28,6 +30,7 @@ class RuleFinding(BaseModel):
     operator: str
     threshold: float
     scope_detail: str
+    unit: Literal["percent", "count"]
     excess: float
 
 
@@ -63,7 +66,7 @@ class RuleEngine:
         warnings: list[RuleFinding] = []
 
         for rule in self._rule_repository.all():
-            value, scope_detail = self._evaluate_rule(rule, exposures)
+            value, scope_detail, unit = self._evaluate_rule(rule, exposures)
             if satisfies(value, rule.operator, rule.threshold, self._tolerance):
                 continue
 
@@ -75,6 +78,7 @@ class RuleEngine:
                 operator=rule.operator,
                 threshold=rule.threshold,
                 scope_detail=scope_detail,
+                unit=unit,
                 excess=_compute_excess(value, rule.operator, rule.threshold),
             )
             if rule.severity == "error":
@@ -89,7 +93,7 @@ class RuleEngine:
             exposures=exposures,
         )
 
-    def _evaluate_rule(self, rule: Rule, exposures: Exposures) -> tuple[float, str]:
+    def _evaluate_rule(self, rule: Rule, exposures: Exposures) -> tuple[float, str, str]:
         dimension, value = parse_scope(rule.scope)
         if dimension == "portfolio":
             return evaluate_portfolio(rule.metric_definition, exposures)
