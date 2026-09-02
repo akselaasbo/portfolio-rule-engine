@@ -3,8 +3,10 @@ from collections import Counter
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.api.routes_instruments import get_repository as get_instrument_repository
+from app.config import settings
 from app.data.repository import InstrumentRepository
 from app.domain.engine import RuleEngine
+from app.domain.optimizer import find_nearest_valid_portfolio
 from app.models.requests import ValidatePortfolioRequest
 from app.models.responses import ValidationResponse
 
@@ -46,4 +48,10 @@ def validate_portfolio(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    return ValidationResponse.from_result(result)
+    nearest_valid = None
+    if result.violations:
+        nearest_valid = find_nearest_valid_portfolio(
+            holdings, instrument_repo, rule_engine.rule_repository, settings.weight_tolerance
+        )
+
+    return ValidationResponse.from_result(result, nearest_valid)

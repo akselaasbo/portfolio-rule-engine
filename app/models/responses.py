@@ -4,6 +4,8 @@ from pydantic import BaseModel
 
 from app.domain.engine import RuleFinding, ValidationResult
 from app.domain.exposures import Exposures
+from app.domain.optimizer import ChangeSummaryItem, NearestValidResult
+from app.models.holding import Holding
 
 
 class ValidationResponse(BaseModel):
@@ -12,15 +14,23 @@ class ValidationResponse(BaseModel):
     warnings: list[RuleFinding]
     exposures: Exposures
     summary: str
+    nearest_valid_portfolio: list[Holding] | None = None
+    change_summary: list[ChangeSummaryItem] | None = None
 
     @classmethod
-    def from_result(cls, result: ValidationResult) -> ValidationResponse:
+    def from_result(
+        cls,
+        result: ValidationResult,
+        nearest_valid: NearestValidResult | None = None,
+    ) -> ValidationResponse:
         return cls(
             portfolio_valid=result.portfolio_valid,
             violations=result.violations,
             warnings=result.warnings,
             exposures=result.exposures,
             summary=_build_summary(len(result.violations), len(result.warnings)),
+            nearest_valid_portfolio=nearest_valid.holdings if nearest_valid else None,
+            change_summary=nearest_valid.change_summary if nearest_valid else None,
         )
 
 

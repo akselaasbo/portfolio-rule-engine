@@ -46,6 +46,10 @@ class RuleEngine:
         self._tolerance = tolerance
         self._validate_rules()
 
+    @property
+    def rule_repository(self) -> RuleRepository:
+        return self._rule_repository
+
     def _validate_rules(self) -> None:
         for rule in self._rule_repository.all():
             dimension, _ = parse_scope(rule.scope)

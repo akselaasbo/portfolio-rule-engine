@@ -1,12 +1,9 @@
-import csv
-from collections import defaultdict
-
 import pytest
 
 from app.config import settings
 from app.data.repository import InstrumentRepository, RuleRepository
 from app.domain.engine import RuleEngine
-from app.models.holding import Holding
+from tests._sample_data import load_expected_outcomes, load_sample_portfolios
 
 # rules.csv er kilden til sannhet for validering (jf. oppgaveteksten). expected_outcomes.csv
 # stemmer ikke fullt ut med rules.csv: disse porteføljene er merket "valid" i fasiten, men
@@ -22,25 +19,8 @@ KJENTE_AVVIK: dict[str, set[str]] = {
 }
 
 
-def _load_portfolios() -> dict[str, list[Holding]]:
-    portfolios: dict[str, list[Holding]] = defaultdict(list)
-    path = settings.data_path / "sample_portfolios.csv"
-    with open(path, newline="", encoding="utf-8") as csv_file:
-        for row in csv.DictReader(csv_file):
-            portfolios[row["portfolio_id"]].append(
-                Holding(ticker=row["ticker"], weight_pct=float(row["weight_pct"]))
-            )
-    return portfolios
-
-
-def _load_expected_outcomes() -> dict[str, str]:
-    path = settings.data_path / "expected_outcomes.csv"
-    with open(path, newline="", encoding="utf-8") as csv_file:
-        return {row["portfolio_id"]: row["expected_result"] for row in csv.DictReader(csv_file)}
-
-
-PORTFOLIOS = _load_portfolios()
-EXPECTED_OUTCOMES = _load_expected_outcomes()
+PORTFOLIOS = load_sample_portfolios()
+EXPECTED_OUTCOMES = load_expected_outcomes()
 
 
 @pytest.mark.parametrize("portfolio_id", sorted(PORTFOLIOS))
