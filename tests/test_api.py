@@ -21,7 +21,7 @@ def test_health_returns_200(client: TestClient) -> None:
 def test_instruments_returns_all_instruments(client: TestClient) -> None:
     response = client.get("/instruments")
     assert response.status_code == 200
-    assert len(response.json()) == 17
+    assert len(response.json()) == 18
 
 
 def test_validate_example_from_oppgavetekst_returns_200(client: TestClient) -> None:
