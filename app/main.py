@@ -4,7 +4,8 @@ from fastapi import FastAPI
 
 from app.api.routes_instruments import router as instruments_router
 from app.config import settings
-from app.data.repository import InstrumentRepository
+from app.data.repository import InstrumentRepository, RuleRepository
+from app.domain.engine import RuleEngine
 
 
 @asynccontextmanager
@@ -16,6 +17,14 @@ async def lifespan(app: FastAPI):
         raise RuntimeError(
             f"Klarte ikke å laste instrumenter fra {instruments_path}: {exc}"
         ) from exc
+
+    rules_path = settings.data_path / "rules.csv"
+    try:
+        rule_repository = RuleRepository.from_csv(rules_path)
+        app.state.rule_engine = RuleEngine(rule_repository, settings.weight_tolerance)
+    except Exception as exc:
+        raise RuntimeError(f"Klarte ikke å laste regler fra {rules_path}: {exc}") from exc
+
     yield
 
 

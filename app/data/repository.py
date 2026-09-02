@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.data.loader import load_instruments
+from app.data.loader import load_instruments, load_rules
 from app.models.instrument import Instrument
+from app.models.rule import Rule
 
 
 class InstrumentRepository:
@@ -24,3 +25,20 @@ class InstrumentRepository:
 
     def exists(self, ticker: str) -> bool:
         return ticker in self._by_ticker
+
+
+class RuleRepository:
+    """Alle regler lastet fra rules.csv, uten tolkning av innholdet."""
+
+    def __init__(self, rules: list[Rule]) -> None:
+        self._rules = list(rules)
+
+    @classmethod
+    def from_csv(cls, path: Path) -> RuleRepository:
+        return cls(load_rules(path))
+
+    def all(self) -> list[Rule]:
+        return list(self._rules)
+
+    def by_severity(self, severity: str) -> list[Rule]:
+        return [rule for rule in self._rules if rule.severity == severity]
