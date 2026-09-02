@@ -159,7 +159,7 @@ Enheten skilles mellom prosent og antall, slik at frontend kan vise `MIN_NUMBER_
 
 **En portefølje som bryter reglene er ikke en feil.** Den gir 200 OK med `portfolio_valid: false` og en liste over bruddene. Forespørselen ble behandlet korrekt. Svaret er bare at porteføljen ikke består, og det er hele formålet med endepunktet.
 
-Domenelaget kjenner ikke til HTTP. Når det møter noe det ikke kan behandle, kaster det en vanlig `ValueError`, og API-laget oversetter den til riktig statuskode.
+Domenelaget kjenner ikke til HTTP. Møter det noe det ikke kan behandle, kaster det en vanlig ValueError, og API-laget fanger den og oversetter til riktig statuskode. I praksis fanger ruten de fleste slike tilfeller på forhånd, blant annet for å kunne liste alle ukjente tickere samtidig i stedet for å stoppe ved den første. except-blokken beholdes som et sikkerhetsnett hvis en ny kodesti skulle omgå forhåndssjekken.
 
 ## Nærmeste gyldige portefølje
 
@@ -270,7 +270,7 @@ Autentiseringen mot Azure bruker publish profile lagret som en GitHub Secret. Op
 
 ## Antakelser og begrensninger
 
-**`metric_definition` tolkes med søkeord.** Innenfor `portfolio`- og `holding`-scopene skilles reglene fra hverandre ved å se etter nøkkelord i fritekstfeltet, for eksempel om det nevner antall eller ukjent klassifisering. Dette er skjørt hvis teksten omformuleres. Alternativene var å hardkode `rule_code` i koden eller kreve en ekstra kolonne i datasettet. Løsningen holder koden lesbar og datafilen uendret, og begrensningen er kjent.
+**`metric_definition` tolkes med søkeord.** Innenfor `portfolio`- og `holding`-scopene skilles reglene fra hverandre ved å se etter nøkkelord i fritekstfeltet, for eksempel om det nevner antall eller ukjent klassifisering. Dette er skjørt hvis teksten omformuleres. Alternativene var å hardkode `rule_code` i koden eller kreve en ekstra kolonne i datasettet. Løsningen holder koden lesbar og datafilen uendret, og begrensningen er kjent. Sjekken er dessuten implementert flere steder, både i regelmotoren og i optimeringen, noe som forsterker skjørheten. En delt hjelpefunksjon for tolkningen ville vært en forbedring.
 
 **Ukjent klassifisering.** En posisjon regnes som ukjent klassifisert hvis aktivaklasse, sektor eller geografi er `Unknown`. `Unknown` behandles som en egen gruppe i eksponeringene og skjules ikke, slik at brukeren ser hvor stor andel av porteføljen som er uklassifisert.
 
