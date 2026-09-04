@@ -11,8 +11,9 @@ from app.models.holding import Holding
 from app.models.instrument import Instrument
 from app.models.rule import Rule
 
-# Vekter under dette regnes ikke som en reell posisjon: rundes bort ved etterbehandling,
-# og brukes som terskel når kandidater tvinges inn for å oppfylle MIN_NUMBER_OF_HOLDINGS.
+
+# Vekter under dette regnes som avrundingsstøy fra SLSQP og rundes bort.
+# Terskelen for en reell posisjon er min_position_weight (2.0), som er noe annet.
 MIN_MEANINGFUL_WEIGHT_PCT = 0.5
 
 # Samme sentinelverdi som exposures.py bruker for ukjent klassifisering.
