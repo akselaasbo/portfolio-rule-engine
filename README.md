@@ -124,7 +124,7 @@ Filstien hentes fra miljøvariabelen `DATA_DIR` via `app/config.py` og bygges me
 
 ## Regelmotor
 
-Regelsettet leses fra `data/rules.csv` ved oppstart. Ingen terskler, operatorer, alvorlighetsgrader eller regeltekster finnes i koden. De kommer utelukkende fra filen. `Rule`-modellen i `app/models/rule.py` er et flatt speilbilde av en CSV-rad og tolker ingenting selv. All tolkning skjer i regelmotoren.
+Regelsettet leses fra `data/rules.csv` ved oppstart. Ingen terskler, operatorer, alvorlighetsgrader eller regeltekster finnes i koden. De kommer utelukkende fra filen. Optimeringen har to egne terskler som styrer hvordan forslaget bygges, ikke om en portefølje er gyldig. Begge ligger i konfigurasjonen og er beskrevet under Nærmeste gyldige portefølje. `Rule`-modellen i `app/models/rule.py` er et flatt speilbilde av en CSV-rad og tolker ingenting selv. All tolkning skjer i regelmotoren.
 
 ### Hvordan rules.csv tolkes
 
@@ -187,7 +187,7 @@ Instrumenter med `Unknown` i aktivaklasse, sektor eller geografi holdes utenfor 
 
 ### Minsteterskel for posisjoner
 
-En posisjon i forslaget må utgjøre minst 2 prosentpoeng. Terskelen er en domenevurdering, ikke en teknisk: en posisjon under dette er ikke en investeringsbeslutning, den er avrundingsstøy med en ticker på.
+En posisjon i forslaget må utgjøre minst 2 prosentpoeng. Terskelen er en domenevurdering, ikke en teknisk: en posisjon under dette regnes ikke som en investeringsbeslutning.
 
 Terskelen er nødvendig fordi kvadrert avvik favoriserer å spre en endring over mange posisjoner fremfor å konsentrere den i få. Uten den ga en portefølje med fire posisjoner og 80 % totalvekt et forslag med seksten posisjoner, hvorav tolv nye på 1,3 % hver. Matematisk korrekt, men ubrukelig som investeringsråd.
 
@@ -266,7 +266,6 @@ gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000
 
 Gunicorn håndterer prosessene, mens uvicorn-workeren gir den ASGI-støtten FastAPI krever.
 
-Autentiseringen mot Azure bruker publish profile lagret som en GitHub Secret. Oppsettet med federated credentials og OIDC, som er det anbefalte for produksjon fordi det unngår langlevde hemmeligheter, lot seg ikke fullføre mot dette abonnementet. Publish profile er en støttet og dokumentert metode, og hemmeligheten er kryptert i GitHub Secrets.
 
 ## Antakelser og begrensninger
 
