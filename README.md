@@ -195,6 +195,8 @@ Terskelen brukes to steder: posisjoner under den fjernes etter optimeringen og v
 
 Slår terskelen inn, kjøres optimeringen på nytt uten de utelatte instrumentene. Feiler den andre runden, brukes resultatet fra den første.
 
+Terskelen gjelder kun forslaget, ikke valideringen. En innsendt portefølje med en posisjon på én prosent teller som en posisjon og består minimumskravet, siden rules.csv sier «minst fem posisjoner» og ikke «minst fem posisjoner over to prosent». Optimeringen ville ikke selv foreslått en så liten posisjon, men den overprøver ikke brukerens egne valg.
+
 ### Forenkling: minimum antall posisjoner
 
 Kravet om minst fem posisjoner er en kardinalitetsbetingelse. Antall posisjoner er ikke en kontinuerlig funksjon av vektene, og betingelsen lar seg ikke uttrykke som en konveks bibetingelse i optimeringen.
@@ -275,7 +277,7 @@ Gunicorn håndterer prosessene, mens uvicorn-workeren gir den ASGI-støtten Fast
 
 **Geografi behandles som gjensidig utelukkende grupper.** `Global` og `Global ex-US` er egne kategorier og fordeles ikke ut på underliggende markeder. Det følger klassifiseringen i `instruments.csv`.
 
-**Manglende totalvekt håndteres ikke spesielt.** Kvadrert avvik favoriserer spredning, så en portefølje som mangler vekt får den fordelt over flere posisjoner fremfor proporsjonal oppskalering av de eksisterende. Minsteterskelen på 2 prosentpoeng demper effekten betydelig. En mer treffende løsning ville vært å skalere de eksisterende posisjonene proporsjonalt før optimeringen, men det er ikke implementert.
+**Manglende totalvekt håndteres ikke spesielt.** Kvadrert avvik favoriserer spredning, så en portefølje som mangler vekt får den fordelt over flere posisjoner fremfor proporsjonal oppskalering av de eksisterende. Minsteterskelen på 2 prosentpoeng demper effekten betydelig. En mer treffende løsning kunne vært å skalere de eksisterende posisjonene proporsjonalt før optimeringen, men det er ikke implementert.
 
 **Kardinalitetskravet løses heuristisk.** Kravet om minimum antall posisjoner håndteres som etterbehandling og ikke som en bibetingelse, siden det ikke er konvekst. Resultatet er gyldig, men ikke nødvendigvis globalt optimalt.
 

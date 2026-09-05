@@ -7,7 +7,7 @@ from tests._sample_data import load_expected_outcomes, load_sample_portfolios
 
 # rules.csv er kilden til sannhet for validering (jf. oppgaveteksten). expected_outcomes.csv
 # stemmer ikke fullt ut med rules.csv: disse porteføljene er merket "valid" i fasiten, men
-# bryter faktisk terskler fra rules.csv når de evalueres. Vi dokumenterer avviket eksplisitt
+# bryter faktisk terskler fra rules.csv når de evalueres. Dokumenterer avviket eksplisitt
 # her i stedet for å skjule det eller endre fasiten, slik at testen feiler hvis noe endrer seg.
 KJENTE_AVVIK: dict[str, set[str]] = {
     "P1_VALID_BALANCED": {"MAX_SINGLE_GEOGRAPHY_EXPOSURE"},  # 77 % US mot 60 %
